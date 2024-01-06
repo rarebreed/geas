@@ -18,3 +18,43 @@ Jenkinsfile stage.  The Stage will check:
 
 - 
 """
+
+
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any, Callable
+#from geas.func import Functor
+
+# T and R must be serializeable
+@dataclass
+class Task[T, R]:
+    fn: Callable[[T], R]
+    _data: T | None = None
+    cached: dict[T, Path] = field(default_factory=dict)
+    dependents: list["Task[R, Any]"] = field(default_factory=list)
+
+    def data(self, arg: T):
+        self._data = arg
+        return self
+
+    def lookup(self, arg: T) -> Path | None:
+        if arg in self.cached:
+            return self.cached[arg]
+        else:
+            return None
+    
+    def __call__(self, arg: T):
+        cached = self.lookup(arg)
+        if cached is not None:
+
+            # for task in self.dependents:
+            #     task(cached)
+            return cached
+        else:
+            res = self.fn(arg)
+            path = Path("/tmp/ans")
+            with open(path, "w") as f:
+                f.write(f"{res}")
+            self.cached[arg] = path
+            return res
+            
