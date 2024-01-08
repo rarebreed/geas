@@ -9,9 +9,8 @@ or arrow.
 from dataclasses import dataclass
 import json
 from pathlib import Path
-from typing import Any, ClassVar, Literal, Protocol, TypeAlias
+from typing import Any, Literal, Protocol, TypeAlias
 
-import polars as pl
 from polars import DataFrame
 
 
@@ -28,15 +27,17 @@ class Serialize[T, R](Protocol):
 
 class JsonSerde(Serialize[dict[Any, Any], str]):
     data: dict[Any, Any]
-    
+
     def serialize(self) -> str:
         return json.dumps(self.data)
-    
+
     @classmethod
     def deserialize(cls, obj: str) -> dict[Any, Any]:
         return json.loads(obj)
 
-Format: TypeAlias = Literal["json", "parquet", "arrow", "csv"] 
+
+Format: TypeAlias = Literal["json", "parquet", "arrow", "csv"]
+
 
 @dataclass
 class PolarsSerde[F: Format](Serialize[DataFrame, Path]):

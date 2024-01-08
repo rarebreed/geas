@@ -10,6 +10,7 @@ python = "^3.12"
 polars = {version = "^0.20.3", optional = true}
 trio = "^0.23.2"
 pydantic = "^2.5.3"
+pyarrow = {version = "^14.0.2", optional = true}
 
 
 [tool.poetry.group.dev.dependencies]
@@ -19,7 +20,7 @@ pytest = "^7.4.4"
 pytest-async = "^0.1.1"
 
 [tool.poetry.extras]
-data = ["polars"]
+data = ["polars", "pyarrow"]
 
 [build-system]
 requires = ["poetry-core"]

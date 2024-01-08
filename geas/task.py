@@ -21,17 +21,41 @@ Jenkinsfile stage.  The Stage will check:
 
 
 from dataclasses import dataclass, field
+from datetime import datetime
 from pathlib import Path
-from typing import Any, Callable
-#from geas.func import Functor
+from typing import Any, Awaitable, Callable, Literal
+# from geas.func import Functor
+
+
+@dataclass
+class TaskResult[T, R]:
+    task_id: str
+    status: Literal["running", "pending", "pass",
+                    "fail", "exception", "timeout", "skip"]
+    started: datetime
+    ended: datetime
+    input: T
+    output: R | None = None
+    exception: Exception | None = None
+    attempts: int = 0
+
+
+@dataclass
+class DependentRegistry[R]:
+    task: "Task[R, Any]"
+    handler: Callable[[TaskResult[R, Any]], bool]
+    task_result: TaskResult[R, Any] | None = None
 
 # T and R must be serializeable
+
+
 @dataclass
 class Task[T, R]:
-    fn: Callable[[T], R]
+    name: str
+    fn: Callable[[T], Awaitable[R]]
     _data: T | None = None
     cached: dict[T, Path] = field(default_factory=dict)
-    dependents: list["Task[R, Any]"] = field(default_factory=list)
+    dependents: list[DependentRegistry[R]] = field(default_factory=list)
 
     def data(self, arg: T):
         self._data = arg
@@ -42,8 +66,8 @@ class Task[T, R]:
             return self.cached[arg]
         else:
             return None
-    
-    def __call__(self, arg: T):
+
+    async def call(self, arg: T):
         cached = self.lookup(arg)
         if cached is not None:
 
@@ -51,10 +75,16 @@ class Task[T, R]:
             #     task(cached)
             return cached
         else:
-            res = self.fn(arg)
+            res = await self.fn(arg)
             path = Path("/tmp/ans")
             with open(path, "w") as f:
                 f.write(f"{res}")
             self.cached[arg] = path
             return res
-            
+
+    def register(
+        self,
+        next: "Task[R, Any]",
+        predicate: Callable[[TaskResult[R, Any]], bool]
+    ):
+        self.dependents.append(DependentRegistry(next, handler=predicate))
