@@ -24,11 +24,13 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Awaitable, Callable, Literal
-# from geas.func import Functor
+from uuid import uuid4
+
+from geas.serde import Serializable
 
 
 @dataclass
-class TaskResult[T, R]:
+class TaskResult[T: Serializable, R: Serializable]:
     task_id: str
     status: Literal["running", "pending", "pass",
                     "fail", "exception", "timeout", "skip"]
@@ -41,24 +43,26 @@ class TaskResult[T, R]:
 
 
 @dataclass
-class DependentRegistry[R]:
+class DependentRegistry[R: Serializable]:
     task: "Task[R, Any]"
     handler: Callable[[TaskResult[R, Any]], bool]
     task_result: TaskResult[R, Any] | None = None
 
-# T and R must be serializeable
-
 
 @dataclass
-class Task[T, R]:
+class Task[T: Serializable, R: Serializable]:
     name: str
     fn: Callable[[T], Awaitable[R]]
-    _data: T | None = None
+    id: str = field(init=False)
+    _input: T | None = None
     cached: dict[T, Path] = field(default_factory=dict)
     dependents: list[DependentRegistry[R]] = field(default_factory=list)
 
-    def data(self, arg: T):
-        self._data = arg
+    def __post_init__(self):
+        self.id = f"{self.name}-{uuid4()}"
+
+    def input(self, arg: T):
+        self._input = arg
         return self
 
     def lookup(self, arg: T) -> Path | None:
@@ -70,7 +74,6 @@ class Task[T, R]:
     async def call(self, arg: T):
         cached = self.lookup(arg)
         if cached is not None:
-
             # for task in self.dependents:
             #     task(cached)
             return cached

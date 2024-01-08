@@ -6,57 +6,52 @@ to mark that a data type can be (de)serialized to different formats, for example
 or arrow.
 """
 
-from dataclasses import dataclass
+from dataclasses import is_dataclass
+import dataclasses
 import json
-from pathlib import Path
-from typing import Any, Literal, Protocol, TypeAlias
-
+from typing import Any, Protocol, Self, TypedDict
 from polars import DataFrame
 
+from pydantic import BaseModel
 
-class Serialize[T, R](Protocol):
-    data: T
 
-    def serialize(self) -> R:
+class Serializer[T, R](Protocol):
+
+    @classmethod
+    def serialize[F: TypedDict](cls, data: T, options: F | None = None) -> R:
         ...
 
+
+class Serializable(Protocol):
+    def to_dict(self):
+        if is_dataclass(self) and not isinstance(self, type):
+            obj = dataclasses.asdict(self)
+            flds = dataclasses.fields(self)
+            for fld in flds:
+                if not fld.repr:
+                    obj.pop(fld.name)
+            return obj
+        elif isinstance(self, BaseModel):
+            return self.model_dump()
+        else:
+            raise Exception(
+                "self must be a dataclass or subclass from BaseModel")
+
+
+class Deserialize[T](Protocol):
+
     @classmethod
-    def deserialize(cls, obj: R) -> T:
+    def deserialize(cls, obj: Any, **kwargs: Any) -> T:
         ...
 
 
-class JsonSerde(Serialize[dict[Any, Any], str]):
-    data: dict[Any, Any]
-
-    def serialize(self) -> str:
-        return json.dumps(self.data)
-
+class JsonSerializer[T: Serializable](Serializer[T, str]):
     @classmethod
-    def deserialize(cls, obj: str) -> dict[Any, Any]:
-        return json.loads(obj)
+    def serialize[F: TypedDict](cls, data: T, options: F | None = None) -> str:
+        return json.dumps(data.to_dict())
 
 
-Format: TypeAlias = Literal["json", "parquet", "arrow", "csv"]
-
-
-@dataclass
-class PolarsSerde[F: Format](Serialize[DataFrame, Path]):
-    data: DataFrame
-
-    def serialize(self) -> Path:
-        self.data.write_parquet
-        return Path()
-
+class ParquetSerializer[T: Serializable](Serializer[Self, DataFrame]):
     @classmethod
-    def deserialize[G: Format](cls, obj: Path, clz: G) -> DataFrame:
-        match clz:
-            case "json":
-                ...
-            case "parquet":
-                ...
-            case "arrow":
-                ...
-            case "csv":
-                ...
-            case _:
-                ...
+    def serialize[F: TypedDict](cls, data: T, options: F | None = None) -> DataFrame:
+        ...

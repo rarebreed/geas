@@ -549,6 +549,17 @@ files = [
 ]
 
 [[package]]
+name = "tomli-w"
+version = "1.0.0"
+description = "A lil' TOML writer"
+optional = true
+python-versions = ">=3.7"
+files = [
+    {file = "tomli_w-1.0.0-py3-none-any.whl", hash = "sha256:9f2a07e8be30a0729e533ec968016807069991ae2fd921a78d42f429ae5f4463"},
+    {file = "tomli_w-1.0.0.tar.gz", hash = "sha256:f463434305e0336248cac9c2dc8076b707d8a12d019dd349f5c1e382dd1ae1b9"},
+]
+
+[[package]]
 name = "trio"
 version = "0.23.2"
 description = "A friendly Python library for async concurrency and I/O"
@@ -584,4 +595,4 @@ data = ["polars", "pyarrow"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "329adc18dae7d33ec03d218eb5ced43bd8e639d5c4babb2219dc66add4d762fc"
+content-hash = "cf5ec75ff22a96792fba89c5f0a13f880a77dc5238fa2a79fab4f6ade9b05581"
