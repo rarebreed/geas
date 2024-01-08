@@ -14,17 +14,18 @@ class Functor[T](Protocol):
 
 type Option[T] = T | None
 
+
 @dataclass
 class Maybe[T](Functor[T]):
     it: T | None
-    
+
     def map[R](self, fn: Callable[[T], R]) -> "Maybe[R]":
         match self.it:
             case None:
                 return Maybe(it=None)
             case val:
                 return Maybe(it=fn(val))
-            
+
 
 @dataclass
 class Iter[T](Functor[T], Protocol):
@@ -39,6 +40,7 @@ class Iter[T](Functor[T], Protocol):
     @abstractmethod
     def collect(self) -> Iterable[T]:
         ...
+
 
 @dataclass
 class ListIter[T](Iter[T]):
@@ -59,10 +61,10 @@ class ListIter[T](Iter[T]):
 
     def take(self, count: int = 1) -> Iter[T]:
         return ListIter(it=self.it[:count if count < len(self.it) else len(self.it)])
-    
+
     def collect(self) -> list[T]:
         return self.it
-    
+
 
 @dataclass
 class CoroIter[T](Iter[T]):
@@ -81,10 +83,11 @@ class CoroIter[T](Iter[T]):
 
     def take(self, count: int = 1) -> "CoroIter[T]":
         return CoroIter(it=(next(self.it) for _ in range(count)))
-    
+
     def collect(self) -> list[T]:
         return [i for i in self.it]
-    
+
+
 @dataclass
 class SetIter[T](Iter[T]):
     it: set[T]
@@ -102,7 +105,6 @@ class SetIter[T](Iter[T]):
     def take(self, count: int = 1) -> "Iter[T]":
         it = {self.it.pop() for _ in range(count)}
         return SetIter(it=it)
-    
+
     def collect(self) -> list[T]:
         return [i for i in self.it]
-    

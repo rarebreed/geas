@@ -23,9 +23,11 @@ Jenkinsfile stage.  The Stage will check:
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable
-#from geas.func import Functor
+# from geas.func import Functor
 
 # T and R must be serializeable
+
+
 @dataclass
 class Task[T, R]:
     fn: Callable[[T], R]
@@ -42,7 +44,7 @@ class Task[T, R]:
             return self.cached[arg]
         else:
             return None
-    
+
     def __call__(self, arg: T):
         cached = self.lookup(arg)
         if cached is not None:
@@ -57,4 +59,3 @@ class Task[T, R]:
                 f.write(f"{res}")
             self.cached[arg] = path
             return res
-            
