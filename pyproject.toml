@@ -7,7 +7,20 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.12"
+trio = "^0.23.2"
+pydantic = "^2.5.3"
+pyarrow = {version = "^14.0.2", optional = true}
+polars = {version = "^0.20.3", optional = true}
+tomli-w = {version = "^1.0.0", optional = true}
 
+[tool.poetry.group.dev.dependencies]
+autopep8 = "^2.0.4"
+ruff = "^0.1.11"
+pytest = "^7.4.4"
+pytest-async = "^0.1.1"
+
+[tool.poetry.extras]
+data = ["polars", "pyarrow"]
 
 [build-system]
 requires = ["poetry-core"]

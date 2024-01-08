@@ -18,3 +18,76 @@ Jenkinsfile stage.  The Stage will check:
 
 - 
 """
+
+
+from dataclasses import dataclass, field
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Awaitable, Callable, Literal
+from uuid import uuid4
+
+from geas.serde import Serializable
+
+
+@dataclass
+class TaskResult[T: Serializable, R: Serializable]:
+    task_id: str
+    status: Literal["running", "pending", "pass",
+                    "fail", "exception", "timeout", "skip"]
+    started: datetime
+    ended: datetime
+    input: T
+    output: R | None = None
+    exception: Exception | None = None
+    attempts: int = 0
+
+
+@dataclass
+class DependentRegistry[R: Serializable]:
+    task: "Task[R, Any]"
+    handler: Callable[[TaskResult[R, Any]], bool]
+    task_result: TaskResult[R, Any] | None = None
+
+
+@dataclass
+class Task[T: Serializable, R: Serializable]:
+    name: str
+    fn: Callable[[T], Awaitable[R]]
+    id: str = field(init=False)
+    _input: T | None = None
+    cached: dict[T, Path] = field(default_factory=dict)
+    dependents: list[DependentRegistry[R]] = field(default_factory=list)
+
+    def __post_init__(self):
+        self.id = f"{self.name}-{uuid4()}"
+
+    def input(self, arg: T):
+        self._input = arg
+        return self
+
+    def lookup(self, arg: T) -> Path | None:
+        if arg in self.cached:
+            return self.cached[arg]
+        else:
+            return None
+
+    async def call(self, arg: T):
+        cached = self.lookup(arg)
+        if cached is not None:
+            # for task in self.dependents:
+            #     task(cached)
+            return cached
+        else:
+            res = await self.fn(arg)
+            path = Path("/tmp/ans")
+            with open(path, "w") as f:
+                f.write(f"{res}")
+            self.cached[arg] = path
+            return res
+
+    def register(
+        self,
+        next: "Task[R, Any]",
+        predicate: Callable[[TaskResult[R, Any]], bool]
+    ):
+        self.dependents.append(DependentRegistry(next, handler=predicate))
