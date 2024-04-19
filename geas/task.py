@@ -31,32 +31,41 @@ from geas.serde import Serializable
 
 @dataclass
 class TaskResult[T: Serializable, R: Serializable]:
+    input: T
     task_id: str
-    status: Literal["running", "pending", "pass",
-                    "fail", "exception", "timeout", "skip"]
+    status: Literal["running", "pending", "passed", "failed", "exception", 
+                    "upstream_failed", "timedout", "skipped"]
     started: datetime
     ended: datetime
-    input: T
     output: R | None = None
     exception: Exception | None = None
     attempts: int = 0
 
+@dataclass(frozen=True)
+class Signal[T: Serializable]:
+    data: T
 
 @dataclass
-class DependentRegistry[R: Serializable]:
-    task: "Task[R, Any]"
-    handler: Callable[[TaskResult[R, Any]], bool]
-    task_result: TaskResult[R, Any] | None = None
+class Transmission[T: Serializable]:
+    type_: Literal["bus", "topic", "queue"]
+    name: str
 
+    def transmit(self, data: T):
+        ...
+
+@dataclass
+class Input[T: Serializable]:
+    signals: list[Signal[T]]
+    transmitter: Transmission[T]
 
 @dataclass
 class Task[T: Serializable, R: Serializable]:
     name: str
     fn: Callable[[T], Awaitable[R]]
-    id: str = field(init=False)
-    _input: T | None = None
+    transaction_id: str = field(init=False)
+    inputs: list[Input[T]]
     cached: dict[T, Path] = field(default_factory=dict)
-    dependents: list[DependentRegistry[R]] = field(default_factory=list)
+    #dependents: list[DependentRegistry[R]] = field(default_factory=list)
 
     def __post_init__(self):
         self.id = f"{self.name}-{uuid4()}"
@@ -90,4 +99,5 @@ class Task[T: Serializable, R: Serializable]:
         next: "Task[R, Any]",
         predicate: Callable[[TaskResult[R, Any]], bool]
     ):
-        self.dependents.append(DependentRegistry(next, handler=predicate))
+        ...
+        #self.dependents.append(DependentRegistry(next, handler=predicate))

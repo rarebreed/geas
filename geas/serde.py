@@ -9,7 +9,7 @@ or arrow.
 from dataclasses import is_dataclass
 import dataclasses
 import json
-from typing import Any, Protocol, Self, TypedDict
+from typing import Any, Protocol
 from polars import DataFrame
 
 from pydantic import BaseModel
@@ -18,7 +18,7 @@ from pydantic import BaseModel
 class Serializer[T, R](Protocol):
 
     @classmethod
-    def serialize[F: TypedDict](cls, data: T, options: F | None = None) -> R:
+    def serialize[F](cls, data: T, options: F | None = None) -> R:
         ...
 
 
@@ -34,8 +34,7 @@ class Serializable(Protocol):
         elif isinstance(self, BaseModel):
             return self.model_dump()
         else:
-            raise Exception(
-                "self must be a dataclass or subclass from BaseModel")
+            raise Exception("self must be a dataclass or subclass from BaseModel")
 
 
 class Deserialize[T](Protocol):
@@ -47,11 +46,13 @@ class Deserialize[T](Protocol):
 
 class JsonSerializer[T: Serializable](Serializer[T, str]):
     @classmethod
-    def serialize[F: TypedDict](cls, data: T, options: F | None = None) -> str:
+    def serialize[F](cls, data: T, options: F | None = None) -> str:
         return json.dumps(data.to_dict())
 
 
-class ParquetSerializer[T: Serializable](Serializer[Self, DataFrame]):
+class ParquetSerializer[T: Serializable](Serializer[T, DataFrame]):
+    import polars as pl
+    
     @classmethod
-    def serialize[F: TypedDict](cls, data: T, options: F | None = None) -> DataFrame:
+    def serialize[F](cls, data: T, options: F | None = None) -> DataFrame:
         ...
