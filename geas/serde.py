@@ -1,7 +1,7 @@
 """Protocols to handle (de)serialization to different formats
 
 Data exchange is ubiquitous but there is no common standard.  JSON is very popular, but not as much in the 
-data engineering and science world.  There, parquet, arrow, and even csv are more prevalent.  So, we need a
+data engineering and science world.  There, parquet, arrow, and even csv are more prevalent.  So, we need 
 to mark that a data type can be (de)serialized to different formats, for example, JSON,YAML, TOML, Parquet
 or arrow.
 """
@@ -34,7 +34,8 @@ class Serializable(Protocol):
         elif isinstance(self, BaseModel):
             return self.model_dump()
         else:
-            raise Exception("self must be a dataclass or subclass from BaseModel")
+            raise Exception(
+                "self must be a dataclass or subclass from BaseModel")
 
 
 class Deserialize[T](Protocol):
@@ -52,7 +53,7 @@ class JsonSerializer[T: Serializable](Serializer[T, str]):
 
 class ParquetSerializer[T: Serializable](Serializer[T, DataFrame]):
     import polars as pl
-    
+
     @classmethod
     def serialize[F](cls, data: T, options: F | None = None) -> DataFrame:
         ...

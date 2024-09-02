@@ -29,6 +29,7 @@ class Maybe[T](Functor[T]):
 
 @dataclass
 class Iter[T](Functor[T], Protocol):
+    """Methods for something that can be iterated over"""
     @abstractmethod
     def next(self) -> T | None:
         ...
@@ -44,6 +45,7 @@ class Iter[T](Functor[T], Protocol):
 
 @dataclass
 class ListIter[T](Iter[T]):
+    """Concrete Iter for a type with a list"""
     it: list[T]
     _idx: int = 0
 
@@ -68,6 +70,7 @@ class ListIter[T](Iter[T]):
 
 @dataclass
 class CoroIter[T](Iter[T]):
+    """Concrete Iter implementation for a coroutine data type"""
     it: Generator[T, None, None]
     _idx: int = 0
 

@@ -8,6 +8,7 @@ from geas.task import Task
 
 Ser: TypeAlias = Serializable
 
+
 @dataclass
 class Walker:
     head: Task[Ser, Ser]

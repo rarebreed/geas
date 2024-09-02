@@ -2,7 +2,7 @@
 
 A Task is a way to chain together stages of work that needs to be done to accomplish some goal.  A Task persists the
 state of what it has accomplished so far to a local or remote system so that it can be resumed.  This is necessary 
-for some kind of project that has many sub-tasks that can take days to finish.  You do not want to keep aa compute
+for some kind of project that has many sub-tasks that can take days to finish.  You do not want to keep a compute
 node of some kind running that long polling for completion of a dependency Task.
 
 A Task also can have zero or more dependency tasks.  Dependency tasks will register themselves with the upstream Task.
@@ -33,7 +33,7 @@ from geas.serde import Serializable
 class TaskResult[T: Serializable, R: Serializable]:
     input: T
     task_id: str
-    status: Literal["running", "pending", "passed", "failed", "exception", 
+    status: Literal["running", "pending", "passed", "failed", "exception",
                     "upstream_failed", "timedout", "skipped"]
     started: datetime
     ended: datetime
@@ -41,9 +41,11 @@ class TaskResult[T: Serializable, R: Serializable]:
     exception: Exception | None = None
     attempts: int = 0
 
+
 @dataclass(frozen=True)
 class Signal[T: Serializable]:
     data: T
+
 
 @dataclass
 class Transmission[T: Serializable]:
@@ -53,10 +55,12 @@ class Transmission[T: Serializable]:
     def transmit(self, data: T):
         ...
 
+
 @dataclass
 class Input[T: Serializable]:
     signals: list[Signal[T]]
     transmitter: Transmission[T]
+
 
 @dataclass
 class Task[T: Serializable, R: Serializable]:
@@ -65,7 +69,7 @@ class Task[T: Serializable, R: Serializable]:
     transaction_id: str = field(init=False)
     inputs: list[Input[T]]
     cached: dict[T, Path] = field(default_factory=dict)
-    #dependents: list[DependentRegistry[R]] = field(default_factory=list)
+    # dependents: list[DependentRegistry[R]] = field(default_factory=list)
 
     def __post_init__(self):
         self.id = f"{self.name}-{uuid4()}"
@@ -100,4 +104,4 @@ class Task[T: Serializable, R: Serializable]:
         predicate: Callable[[TaskResult[R, Any]], bool]
     ):
         ...
-        #self.dependents.append(DependentRegistry(next, handler=predicate))
+        # self.dependents.append(DependentRegistry(next, handler=predicate))
