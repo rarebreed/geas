@@ -3,6 +3,8 @@
 For geas, we will allow cyclic dependencies in the graph.  geas is not like
 airflow in that sense, because the graphs represent different things.
 
+## Compared to airflow
+
 Airflow, which is really a task dependency graph, requires no loops in order to
 topologically sort the nodes to determine the ordering of nodes so that the
 "leaf" can be run first.  If you have
@@ -21,6 +23,8 @@ B, and the output of B goes to C.  It does imply that there is some side effect
 (some outside state like a db for example) that is being changed that the tasks
 in airflow use.  If this was not true, and no state had to be created or
 changed, we could run tasks A, B and C in parallel.
+
+## Compared to geas
 
 On the other hand, geas really is a call graph where the output of one node may
 traverse an edge and become the input to the connected node.  We are
@@ -69,7 +73,7 @@ async def task2_fn(arg: OtherSerializableType):
     result: OtherSerializableType = transform(arg)
     return result
 
-async task3_fn(arg: OtherSerializableType):
+async def task3_fn(arg: OtherSerializableType):
     data = OtherSerializableTypeSerializer.serialize(arg)
     return Json(data=data)
 

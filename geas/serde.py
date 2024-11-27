@@ -24,7 +24,7 @@ class Serializer[T, R](Protocol):
 
 class Serializable(Protocol):
     def to_dict(self):
-        if is_dataclass(self) and not isinstance(self, type):
+        if is_dataclass(self):
             obj = dataclasses.asdict(self)
             flds = dataclasses.fields(self)
             for fld in flds:

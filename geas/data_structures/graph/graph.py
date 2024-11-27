@@ -58,9 +58,10 @@ class Graph[T]:
             _description_
         """
         if vtx in self.vertices:
-            raise Exception(f"vertex {vtx} already in vertices")
-        self.vertices.append(vtx)
-        self.adj_list[vtx] = []
+            log.error(f"vertex {vtx} already in vertices")
+        else:
+            self.vertices.append(vtx)
+            self.adj_list[vtx] = []
         return self
 
     def _verify_vertex(self, v: Vertex) -> bool:
@@ -90,7 +91,7 @@ class Graph[T]:
             self.adj_list[src].pop(idx)
         self.adj_list[src].append(Edge(src, dst, weight, lbl))
 
-    def are_adjacent(self, v: Vertex[T], u: Vertex[T]):
+    def are_adjacent(self, u: Vertex[T], v: Vertex[T]):
         """Returns index in adj_list if v has an edge with u or None if there is no edge
 
         Parameters
@@ -105,10 +106,10 @@ class Graph[T]:
         _type_
             _description_
         """
-        if any([self._verify_vertex(v), self._verify_vertex(u)]):
+        if any([self._verify_vertex(u), self._verify_vertex(v)]):
             return None
-        for i, edge in enumerate(self.adj_list[v]):
-            if edge.dest == u:
+        for i, edge in enumerate(self.adj_list[u]):
+            if edge.dest == v:
                 return i
         return None
 
@@ -149,15 +150,18 @@ def bfs[T](
     start: Vertex[T],
     matcher: Callable[[Vertex[T]], bool]
 ) -> BFSTraversal[T]:
-    """Breadth First Search
+    """_summary_
 
     Returns
     -------
     _type_
         _description_
     """
+    # The queue holds the "frontier"
     queue: SimpleQueue[Vertex[T]] = SimpleQueue()
     queue.put_nowait(start)
+
+    # map of vertx to number of edges travelled so far
     distances: dict[Vertex[T], float] = {}
     parents: dict[Vertex[T], Vertex[T] | None] = {}
 
@@ -177,8 +181,8 @@ def bfs[T](
             u = e.dest
             if distances[u] == math.inf:
                 distances[u] = distances[v] + 1
-                parents[u] = v
-                queue.put_nowait(u)
+            parents[u] = v
+            queue.put_nowait(u)
     return BFSTraversal(None, parents, distances)
 
 
